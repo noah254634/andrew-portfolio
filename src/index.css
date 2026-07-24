@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+/* Default Light Theme: Soft Warm Off-White (Editorial Canvas) */
+:root, [data-theme="light"] {
+  --bg-canvas: #FCFBF8;
+  --bg-surface: #F4F3EE;
+  --text-charcoal: #141413;
+  --text-muted: #73726D;
+  --border-hairline: #E6E4DD;
+  --accent-bronze: #3D3935;
+  --accent-contrast: #FCFBF8;
+  --badge-bg: #E6E4DD;
+  --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.03);
+  
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Dark Theme: Dark Obsidian Studio */
+[data-theme="dark"] {
+  --bg-canvas: #141413;
+  --bg-surface: #1E1D1B;
+  --text-charcoal: #F5F4EF;
+  --text-muted: #9E9C94;
+  --border-hairline: #2B2A27;
+  --accent-bronze: #D9CBB9;
+  --accent-contrast: #141413;
+  --badge-bg: #2B2A27;
+  --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-charcoal);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--accent-bronze);
+  color: var(--accent-contrast);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: var(--text-charcoal);
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input, button, textarea, select {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-hairline);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Mobile Responsive Utility Classes */
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Reset grid spans for mobile screens */
+  .editorial-card {
+    grid-column: span 1 !important;
+  }
+}
