@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
+import api, { formatImageUrl } from '../api/axios';
 
 const CACHE_KEY = 'swr_cached_projects';
 
@@ -140,7 +140,7 @@ export default function WorksShowcase() {
                 <div style={styles.imageBox}>
                   {proj.cover_image_url ? (
                     <motion.img
-                      src={proj.cover_image_url}
+                      src={formatImageUrl(proj.cover_image_url)}
                       alt={proj.title}
                       style={styles.cardImg}
                       variants={{

@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
+import api, { formatImageUrl } from '../api/axios';
+
+const CACHE_KEY = 'swr_cached_projects';
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const [loading, setLoading] = useState(() => projects.length === 0);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -18,8 +28,9 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       const response = await api.get('/projects');
-      if (Array.isArray(response.data)) {
+      if (Array.isArray(response.data) && response.data.length > 0) {
         setProjects(response.data);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
       }
     } catch (err) {
       console.warn('Failed to load project catalogue:', err);
@@ -113,8 +124,18 @@ export default function ProjectsPage() {
         </motion.div>
 
         {/* Projects Grid */}
-        {loading ? (
-          <div style={styles.loadingBox}>Loading project catalogue...</div>
+        {loading && projects.length === 0 ? (
+          <div style={styles.grid}>
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} style={styles.skeletonCard}>
+                <div style={styles.skeletonImage} />
+                <div style={styles.skeletonBody}>
+                  <div style={styles.skeletonMeta} />
+                  <div style={styles.skeletonTitle} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filteredProjects.length === 0 ? (
           <div style={styles.emptyBox}>No projects match your search or filter selection.</div>
         ) : (
@@ -136,7 +157,7 @@ export default function ProjectsPage() {
                 <div style={styles.imageBox}>
                   {proj.cover_image_url ? (
                     <motion.img
-                      src={proj.cover_image_url}
+                      src={formatImageUrl(proj.cover_image_url)}
                       alt={proj.title}
                       style={styles.cardImg}
                       variants={{
@@ -276,12 +297,6 @@ const styles = {
     color: 'var(--accent-contrast)',
     fontWeight: '500',
   },
-  loadingBox: {
-    padding: '60px',
-    textAlign: 'center',
-    fontFamily: "var(--font-mono)",
-    color: 'var(--text-muted)',
-  },
   emptyBox: {
     padding: '48px',
     textAlign: 'center',
@@ -304,6 +319,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     boxShadow: 'var(--card-shadow)',
+    width: '100%',
   },
   imageBox: {
     height: '260px',
@@ -399,5 +415,38 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text-muted)',
     lineHeight: '1.5',
+  },
+  skeletonCard: {
+    width: '100%',
+    height: '360px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-hairline)',
+    borderRadius: '14px',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    opacity: 0.6,
+  },
+  skeletonImage: {
+    height: '240px',
+    backgroundColor: 'var(--border-hairline)',
+  },
+  skeletonBody: {
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  skeletonMeta: {
+    width: '40%',
+    height: '14px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonTitle: {
+    width: '80%',
+    height: '22px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
   },
 };

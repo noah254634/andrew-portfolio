@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../api/axios';
+import api, { formatImageUrl } from '../api/axios';
 
 const CACHE_KEY = 'swr_cached_reviews';
 
@@ -168,7 +168,7 @@ export default function ReviewsSection() {
                     <div style={styles.clientProfile}>
                       {activeReview.client_avatar ? (
                         <img
-                          src={activeReview.client_avatar}
+                          src={formatImageUrl(activeReview.client_avatar)}
                           alt={activeReview.client_name}
                           style={styles.avatarImg}
                         />
