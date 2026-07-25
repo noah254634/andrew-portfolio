@@ -3,11 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 
+const CACHE_KEY = 'swr_cached_projects';
+
 export default function WorksShowcase() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Stale-While-Revalidate (SWR): Load cached projects instantly from localStorage
+  const [projects, setProjects] = useState(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const [loading, setLoading] = useState(() => projects.length === 0);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,8 +27,9 @@ export default function WorksShowcase() {
   const fetchProjects = async () => {
     try {
       const response = await api.get('/projects');
-      if (Array.isArray(response.data)) {
+      if (Array.isArray(response.data) && response.data.length > 0) {
         setProjects(response.data);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
       }
     } catch (err) {
       console.warn('Failed to load projects:', err);
@@ -34,7 +45,6 @@ export default function WorksShowcase() {
       ? projects
       : projects.filter((p) => p.category === selectedCategory);
 
-  // Keep homepage UI clean & focused: show top 4 featured projects only
   const displayedProjects = filteredProjects.slice(0, 4);
 
   const gridContainerVariants = {
@@ -91,8 +101,20 @@ export default function WorksShowcase() {
           )}
         </motion.div>
 
-        {loading ? (
-          <div style={styles.loadingBox}>Loading project catalogue...</div>
+        {loading && projects.length === 0 ? (
+          /* High-End Shimmer Skeleton Grid */
+          <div style={styles.grid}>
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} style={styles.skeletonCard} className="shimmer-card">
+                <div style={styles.skeletonImage} />
+                <div style={styles.skeletonBody}>
+                  <div style={styles.skeletonMeta} />
+                  <div style={styles.skeletonTitle} />
+                  <div style={styles.skeletonSub} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : displayedProjects.length === 0 ? (
           <div style={styles.emptyBox}>No projects found in this collection.</div>
         ) : (
@@ -159,7 +181,7 @@ export default function WorksShowcase() {
           </motion.div>
         )}
 
-        {/* Explore Full Archive Button -> Navigates to dedicated /projects page */}
+        {/* Explore Full Archive Button */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -244,12 +266,6 @@ const styles = {
     color: 'var(--accent-contrast)',
     fontWeight: '500',
   },
-  loadingBox: {
-    padding: '40px',
-    textAlign: 'center',
-    fontFamily: "var(--font-mono)",
-    color: 'var(--text-muted)',
-  },
   emptyBox: {
     padding: '36px',
     textAlign: 'center',
@@ -273,6 +289,7 @@ const styles = {
     flexDirection: 'column',
     transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
     boxShadow: 'var(--card-shadow)',
+    width: '100%',
   },
   imageBox: {
     height: '270px',
@@ -383,5 +400,44 @@ const styles = {
     fontSize: '13px',
     fontWeight: '500',
     cursor: 'pointer',
+  },
+  skeletonCard: {
+    width: '100%',
+    height: '380px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-hairline)',
+    borderRadius: '14px',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    opacity: 0.6,
+  },
+  skeletonImage: {
+    height: '240px',
+    backgroundColor: 'var(--border-hairline)',
+  },
+  skeletonBody: {
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  skeletonMeta: {
+    width: '40%',
+    height: '14px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonTitle: {
+    width: '80%',
+    height: '22px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonSub: {
+    width: '60%',
+    height: '14px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
   },
 };

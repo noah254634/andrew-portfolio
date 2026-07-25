@@ -2,12 +2,23 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
 
+const CACHE_KEY = 'swr_cached_reviews';
+
 export default function ReviewsSection() {
-  const [reviews, setReviews] = useState([]);
+  // Stale-While-Revalidate (SWR): Initialize state from localStorage for instant 0ms mount
+  const [reviews, setReviews] = useState(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => reviews.length === 0);
   const autoPlayRef = useRef(null);
 
   useEffect(() => {
@@ -29,17 +40,14 @@ export default function ReviewsSection() {
   }, [reviews, isPaused]);
 
   const fetchReviews = async () => {
-    setLoading(true);
     try {
       const response = await api.get('/reviews');
-      if (Array.isArray(response.data)) {
+      if (Array.isArray(response.data) && response.data.length > 0) {
         setReviews(response.data);
-      } else {
-        setReviews([]);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
       }
     } catch (err) {
       console.warn('Failed to load reviews from API:', err);
-      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -57,8 +65,8 @@ export default function ReviewsSection() {
     setActiveIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
   };
 
-  if (loading || reviews.length === 0) {
-    return null; // Cleanly hide section when no published reviews exist
+  if (!loading && reviews.length === 0) {
+    return null; // Cleanly hide if no reviews exist in DB
   }
 
   const activeReview = reviews[activeIndex] || reviews[0];
@@ -117,81 +125,90 @@ export default function ReviewsSection() {
           )}
         </div>
 
-        {/* Auto-Sliding Featured Showcase Card */}
+        {/* Auto-Sliding Featured Showcase Card or Skeleton Loader */}
         <div style={styles.cardWrapper}>
-          <AnimatePresence custom={direction} mode="wait">
-            {activeReview && (
-              <motion.div
-                key={activeReview.id || activeIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                style={styles.featuredCard}
-              >
-                {/* Rating Stars & Project Tag */}
-                <div style={styles.ratingRow}>
-                  <div style={styles.stars}>
-                    {'★'.repeat(activeReview.rating || 5).split('').map((star, i) => (
-                      <span key={i} style={styles.starSymbol}>{star}</span>
-                    ))}
-                  </div>
-                  {activeReview.project_tag && (
-                    <span style={styles.projectBadge}>{activeReview.project_tag}</span>
-                  )}
-                </div>
-
-                {/* Testimonial Quote */}
-                <blockquote style={styles.quoteBlock}>
-                  “{activeReview.content}”
-                </blockquote>
-
-                {/* Client Profile & Slide Dots */}
-                <div style={styles.clientFooterRow}>
-                  <div style={styles.clientProfile}>
-                    {activeReview.client_avatar ? (
-                      <img
-                        src={activeReview.client_avatar}
-                        alt={activeReview.client_name}
-                        style={styles.avatarImg}
-                      />
-                    ) : (
-                      <div style={styles.avatarPlaceholder}>
-                        {activeReview.client_name?.charAt(0) || 'C'}
-                      </div>
-                    )}
-                    <div style={styles.clientMetaText}>
-                      <h4 style={styles.clientName}>{activeReview.client_name}</h4>
-                      <p style={styles.clientRole}>
-                        {activeReview.client_role}
-                        {activeReview.company_name && ` — ${activeReview.company_name}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {reviews.length > 1 && (
-                    <div style={styles.dotIndicators}>
-                      {reviews.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setDirection(idx > activeIndex ? 1 : -1);
-                            setActiveIndex(idx);
-                          }}
-                          style={{
-                            ...styles.dot,
-                            ...(activeIndex === idx ? styles.dotActive : {}),
-                          }}
-                          aria-label={`Go to slide ${idx + 1}`}
-                        />
+          {loading && reviews.length === 0 ? (
+            <div style={styles.skeletonFeaturedCard}>
+              <div style={styles.skeletonStars} />
+              <div style={styles.skeletonQuote} />
+              <div style={styles.skeletonQuoteSub} />
+              <div style={styles.skeletonProfile} />
+            </div>
+          ) : (
+            <AnimatePresence custom={direction} mode="wait">
+              {activeReview && (
+                <motion.div
+                  key={activeReview.id || activeIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  style={styles.featuredCard}
+                >
+                  {/* Rating Stars & Project Tag */}
+                  <div style={styles.ratingRow}>
+                    <div style={styles.stars}>
+                      {'★'.repeat(activeReview.rating || 5).split('').map((star, i) => (
+                        <span key={i} style={styles.starSymbol}>{star}</span>
                       ))}
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    {activeReview.project_tag && (
+                      <span style={styles.projectBadge}>{activeReview.project_tag}</span>
+                    )}
+                  </div>
+
+                  {/* Testimonial Quote */}
+                  <blockquote style={styles.quoteBlock}>
+                    “{activeReview.content}”
+                  </blockquote>
+
+                  {/* Client Profile & Slide Dots */}
+                  <div style={styles.clientFooterRow}>
+                    <div style={styles.clientProfile}>
+                      {activeReview.client_avatar ? (
+                        <img
+                          src={activeReview.client_avatar}
+                          alt={activeReview.client_name}
+                          style={styles.avatarImg}
+                        />
+                      ) : (
+                        <div style={styles.avatarPlaceholder}>
+                          {activeReview.client_name?.charAt(0) || 'C'}
+                        </div>
+                      )}
+                      <div style={styles.clientMetaText}>
+                        <h4 style={styles.clientName}>{activeReview.client_name}</h4>
+                        <p style={styles.clientRole}>
+                          {activeReview.client_role}
+                          {activeReview.company_name && ` — ${activeReview.company_name}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {reviews.length > 1 && (
+                      <div style={styles.dotIndicators}>
+                        {reviews.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setDirection(idx > activeIndex ? 1 : -1);
+                              setActiveIndex(idx);
+                            }}
+                            style={{
+                              ...styles.dot,
+                              ...(activeIndex === idx ? styles.dotActive : {}),
+                            }}
+                            aria-label={`Go to slide ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Supporting Mini Cards */}
@@ -498,5 +515,45 @@ const styles = {
     fontSize: '9.5px',
     color: 'var(--accent-bronze)',
     marginTop: 'auto',
+  },
+  skeletonFeaturedCard: {
+    width: '100%',
+    maxWidth: '780px',
+    height: '240px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-hairline)',
+    borderRadius: '14px',
+    padding: '32px 36px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '16px',
+    opacity: 0.6,
+  },
+  skeletonStars: {
+    width: '120px',
+    height: '16px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonQuote: {
+    width: '80%',
+    height: '20px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonQuoteSub: {
+    width: '50%',
+    height: '18px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '4px',
+  },
+  skeletonProfile: {
+    width: '140px',
+    height: '36px',
+    backgroundColor: 'var(--border-hairline)',
+    borderRadius: '20px',
+    marginTop: '12px',
   },
 };
