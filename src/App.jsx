@@ -4,6 +4,7 @@ import PublicNavbar from './components/PublicNavbar';
 import Home from './pages/Home';
 import ProjectDetail from './pages/ProjectDetail';
 import ServicesPage from './pages/ServicesPage';
+import ProjectsPage from './pages/ProjectsPage';
 import { useThemeStore } from './store/useThemeStore';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
         <PublicNavbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/work/:id" element={<ProjectDetail />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="*" element={<Home />} />

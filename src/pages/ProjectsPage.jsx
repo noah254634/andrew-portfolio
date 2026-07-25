@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 
-export default function WorksShowcase() {
+export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [showAll, setShowAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchProjects();
   }, []);
 
@@ -21,7 +22,7 @@ export default function WorksShowcase() {
         setProjects(response.data);
       }
     } catch (err) {
-      console.warn('Failed to load projects:', err);
+      console.warn('Failed to load project catalogue:', err);
     } finally {
       setLoading(false);
     }
@@ -29,26 +30,26 @@ export default function WorksShowcase() {
 
   const categories = ['All', ...new Set(projects.map((p) => p.category).filter(Boolean))];
 
-  const filteredProjects =
-    selectedCategory === 'All'
-      ? projects
-      : projects.filter((p) => p.category === selectedCategory);
-
-  // Keep homepage UI clean & focused: show top 4 featured projects only
-  const displayedProjects = filteredProjects.slice(0, 4);
+  const filteredProjects = projects.filter((p) => {
+    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+    const matchesSearch =
+      !searchQuery ||
+      p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.client?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const gridContainerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.08 },
     },
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 24 },
     visible: {
       opacity: 1,
       y: 0,
@@ -57,19 +58,39 @@ export default function WorksShowcase() {
   };
 
   return (
-    <section id="works" style={styles.section}>
+    <main style={styles.pageContainer}>
       <div style={styles.container}>
-        {/* Section Header */}
+        {/* Header Breadcrumb & Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          style={styles.headerRow}
+          style={styles.headerBox}
         >
-          <div>
-            <span style={styles.monoCategory}>Selected Work</span>
-            <h2 style={styles.sectionTitle}>Featured Projects</h2>
+          <span style={styles.monoCategory}>Full Portfolio Archive</span>
+          <h1 style={styles.pageTitle}>Selected Works & Commissions</h1>
+          <p style={styles.subtitleText}>
+            A comprehensive archive of brand identities, publications, packaging, and digital visual systems crafted for design-forward clients worldwide.
+          </p>
+        </motion.div>
+
+        {/* Filter Controls Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          style={styles.filterBar}
+        >
+          {/* Search Box */}
+          <div style={styles.searchBox}>
+            <span style={styles.searchIcon}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search projects, clients, keywords..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
           </div>
 
           {/* Category Filter Pills */}
@@ -91,28 +112,25 @@ export default function WorksShowcase() {
           )}
         </motion.div>
 
+        {/* Projects Grid */}
         {loading ? (
           <div style={styles.loadingBox}>Loading project catalogue...</div>
-        ) : displayedProjects.length === 0 ? (
-          <div style={styles.emptyBox}>No projects found in this collection.</div>
+        ) : filteredProjects.length === 0 ? (
+          <div style={styles.emptyBox}>No projects match your search or filter selection.</div>
         ) : (
           <motion.div
             style={styles.grid}
             variants={gridContainerVariants}
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
+            animate="visible"
           >
-            {displayedProjects.map((proj, idx) => (
+            {filteredProjects.map((proj) => (
               <motion.div
                 key={proj.id}
                 variants={cardVariants}
                 whileHover="hover"
                 onClick={() => navigate(`/work/${proj.id}`)}
-                style={{
-                  ...styles.card,
-                  gridColumn: idx % 5 === 0 && !isMobileWidth() ? 'span 2' : 'span 1',
-                }}
+                style={styles.card}
                 className="editorial-card"
               >
                 <div style={styles.imageBox}>
@@ -141,7 +159,7 @@ export default function WorksShowcase() {
                     initial={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.2 }}
                   >
-                    View Project Case &rarr;
+                    View Case &rarr;
                   </motion.div>
                 </div>
 
@@ -158,73 +176,87 @@ export default function WorksShowcase() {
             ))}
           </motion.div>
         )}
-
-        {/* Explore Full Archive Button -> Navigates to dedicated /projects page */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          style={styles.viewAllRow}
-        >
-          <motion.button
-            whileHover={{ scale: 1.04, translateY: -2 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => navigate('/projects')}
-            style={styles.viewAllBtn}
-            className="btn-responsive"
-          >
-            Explore Full Project Archive ({projects.length}) &rarr;
-          </motion.button>
-        </motion.div>
       </div>
-    </section>
+    </main>
   );
 }
 
-const isMobileWidth = () => typeof window !== 'undefined' && window.innerWidth <= 768;
-
 const styles = {
-  section: {
-    padding: '64px 20px',
+  pageContainer: {
+    minHeight: '100vh',
+    padding: '48px 20px 80px 20px',
     backgroundColor: 'var(--bg-canvas)',
-    borderBottom: '1px solid var(--border-hairline)',
+    color: 'var(--text-charcoal)',
+    fontFamily: "var(--font-sans)",
   },
   container: {
-    maxWidth: '1240px',
+    maxWidth: '1280px',
     margin: '0 auto',
   },
-  headerRow: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    marginBottom: '36px',
-    flexWrap: 'wrap',
-    gap: '16px',
-    paddingBottom: '16px',
+  headerBox: {
+    marginBottom: '40px',
+    paddingBottom: '24px',
     borderBottom: '1px solid var(--border-hairline)',
   },
   monoCategory: {
     fontFamily: "var(--font-mono)",
     fontSize: '11px',
-    color: 'var(--text-muted)',
+    color: 'var(--accent-bronze)',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
     display: 'block',
-    marginBottom: '4px',
+    marginBottom: '8px',
   },
-  sectionTitle: {
+  pageTitle: {
     fontFamily: "var(--font-serif)",
-    fontSize: 'clamp(32px, 5vw, 44px)',
+    fontSize: 'clamp(36px, 5vw, 56px)',
     fontWeight: '400',
     color: 'var(--text-charcoal)',
-    margin: 0,
+    margin: '0 0 12px 0',
+  },
+  subtitleText: {
+    fontSize: '16px',
+    lineHeight: '1.6',
+    color: 'var(--text-muted)',
+    maxWidth: '640px',
+  },
+  filterBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '36px',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  searchBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-hairline)',
+    borderRadius: '8px',
+    padding: '8px 14px',
+    minWidth: '280px',
+    flex: '0 1 360px',
+  },
+  searchIcon: {
+    fontSize: '14px',
+    opacity: 0.6,
+  },
+  searchInput: {
+    width: '100%',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--text-charcoal)',
+    fontSize: '13px',
+    outline: 'none',
   },
   tabContainer: {
     display: 'flex',
     gap: '6px',
     backgroundColor: 'var(--bg-surface)',
     padding: '4px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     border: '1px solid var(--border-hairline)',
     maxWidth: '100%',
     overflowX: 'auto',
@@ -245,17 +277,17 @@ const styles = {
     fontWeight: '500',
   },
   loadingBox: {
-    padding: '40px',
+    padding: '60px',
     textAlign: 'center',
     fontFamily: "var(--font-mono)",
     color: 'var(--text-muted)',
   },
   emptyBox: {
-    padding: '36px',
+    padding: '48px',
     textAlign: 'center',
     color: 'var(--text-muted)',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '10px',
+    borderRadius: '12px',
   },
   grid: {
     display: 'grid',
@@ -271,11 +303,10 @@ const styles = {
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
-    transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
     boxShadow: 'var(--card-shadow)',
   },
   imageBox: {
-    height: '270px',
+    height: '260px',
     backgroundColor: 'var(--badge-bg)',
     position: 'relative',
     overflow: 'hidden',
@@ -311,7 +342,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'var(--bg-surface)',
-    borderBottom: '1px solid var(--border-hairline)',
   },
   placeholderTag: {
     fontFamily: "var(--font-mono)",
@@ -369,19 +399,5 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text-muted)',
     lineHeight: '1.5',
-  },
-  viewAllRow: {
-    marginTop: '36px',
-    textAlign: 'center',
-  },
-  viewAllBtn: {
-    padding: '12px 28px',
-    backgroundColor: 'var(--bg-surface)',
-    border: '1px solid var(--border-hairline)',
-    color: 'var(--text-charcoal)',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
   },
 };

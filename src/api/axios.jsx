@@ -5,8 +5,10 @@ export const getApiBaseURL = () => {
   if (customUrl) {
     return customUrl.endsWith('/api/v1') ? customUrl : `${customUrl.replace(/\/$/, '')}/api/v1`;
   }
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+
+  const envUrl = import.meta.env.VITE_API_URL?.trim();
+  if (envUrl) {
+    return envUrl.endsWith('/api/v1') ? envUrl : `${envUrl.replace(/\/$/, '')}/api/v1`;
   }
 
   const protocol = window.location.protocol;
@@ -17,7 +19,7 @@ export const getApiBaseURL = () => {
     return `${protocol}//${hostname}:8000/api/v1`;
   }
 
-  // If accessing via ngrok or custom domain
+  // If accessing via ngrok or cloud production domain
   if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
     return `${window.location.origin}/api/v1`;
   }

@@ -11,10 +11,13 @@ export default function PublicNavbar() {
 
   const navLinks = [
     { label: 'Works', href: isHome ? '#works' : '/#works' },
+    { label: 'All Projects', href: '/projects' },
     { label: 'Capabilities', href: '/services' },
+    { label: 'Reviews', href: isHome ? '#reviews' : '/#reviews' },
     { label: 'About', href: isHome ? '#about' : '/#about' },
     { label: 'Contact', href: isHome ? '#contact' : '/#contact' },
   ];
+
 
   return (
     <header style={styles.headerContainer}>
@@ -126,7 +129,8 @@ export default function PublicNavbar() {
 const styles = {
   headerContainer: {
     backgroundColor: 'var(--bg-canvas)',
-    borderBottom: '1px solid var(--border-hairline)',
+    borderBottom: '1px solid var(--border-accent)',
+    boxShadow: '0 1px 0 0 var(--border-hairline)',
     position: 'sticky',
     top: 0,
     zIndex: 100,

@@ -95,7 +95,15 @@ export default function Footer() {
             © {new Date().getFullYear()} {profile.name}. All rights reserved.
           </span>
           <span style={styles.techText}>
-            Built with React & Cloudflare R2
+            <a
+              href="https://wa.me/254743657839"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="stealth-link"
+              style={styles.stealthLink}
+            >
+              Built by Khaemba
+            </a>
           </span>
         </div>
       </div>
@@ -184,6 +192,12 @@ const styles = {
     fontSize: '11px',
     color: 'var(--text-muted)',
   },
+  stealthLink: {
+    color: 'inherit',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition: 'color 0.2s ease, opacity 0.2s ease',
+  },
 };
 
 // Add footer mobile override
@@ -198,6 +212,13 @@ if (typeof document !== 'undefined' && !document.getElementById('footer-responsi
       .footer-bio-col {
         grid-column: span 1 !important;
       }
+    }
+    .stealth-link {
+      transition: color 0.2s ease, opacity 0.2s ease;
+    }
+    .stealth-link:hover {
+      color: var(--accent-bronze) !important;
+      opacity: 0.95;
     }
   `;
   document.head.appendChild(style);

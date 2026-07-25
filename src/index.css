@@ -7,6 +7,7 @@
   --text-charcoal: #141413;
   --text-muted: #73726D;
   --border-hairline: #E6E4DD;
+  --border-accent: rgba(61, 57, 53, 0.22);
   --accent-bronze: #3D3935;
   --accent-contrast: #FCFBF8;
   --badge-bg: #E6E4DD;
@@ -24,6 +25,7 @@
   --text-charcoal: #F5F4EF;
   --text-muted: #9E9C94;
   --border-hairline: #2B2A27;
+  --border-accent: rgba(217, 203, 185, 0.28);
   --accent-bronze: #D9CBB9;
   --accent-contrast: #141413;
   --badge-bg: #2B2A27;
@@ -109,8 +111,11 @@ img {
     display: none !important;
   }
   
-  /* Reset grid spans for mobile screens */
+  /* Centered mobile grid for project cards */
   .editorial-card {
     grid-column: span 1 !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
   }
 }

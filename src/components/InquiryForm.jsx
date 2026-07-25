@@ -14,6 +14,7 @@ export default function InquiryForm() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const scopeOptions = [
+    'Graphics $ Motion Design',
     'Brand Identity & Strategy',
     'Editorial Design & Print',
     'Digital Visual Systems',
@@ -162,7 +163,7 @@ ${formData.message}
             </div>
 
             <button type="submit" disabled={submitting} style={styles.submitBtn} className="btn-responsive">
-              {submitting ? 'Transmitting Brief...' : 'Transmit Project Brief &rarr;'}
+              {submitting ? 'Transmitting Brief...' : 'Transmit Project Brief'}
             </button>
           </form>
         </div>

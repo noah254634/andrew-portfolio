@@ -47,7 +47,14 @@ export default function AboutSection() {
           <div style={styles.imageCol}>
             <div style={styles.frame}>
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.name} style={styles.portraitImg} />
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.name}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  style={styles.portraitImg}
+                />
               ) : (
                 <div style={styles.portraitPlaceholder}>
                   <span>{profile.name}</span>

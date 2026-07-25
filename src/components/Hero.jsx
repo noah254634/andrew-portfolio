@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import api from '../api/axios';
+import StarfieldCanvas from './StarfieldCanvas';
 
 export default function Hero() {
   const [profile, setProfile] = useState({
@@ -19,30 +21,63 @@ export default function Hero() {
   const fetchProfile = async () => {
     try {
       const response = await api.get('/profile');
-      if (response.data && response.data.name) {
-        setProfile(response.data);
+      if (response.data) {
+        setProfile((prev) => ({
+          ...prev,
+          ...response.data,
+        }));
       }
     } catch (err) {
       console.warn('Using default profile content:', err);
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.7, ease: [0.215, 0.61, 0.355, 1] },
+    },
+  };
+
   return (
     <section id="about" className="hero-section" style={styles.heroSection}>
-      <div style={styles.container}>
+      <StarfieldCanvas />
+      <motion.div
+        style={styles.container}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Top Status Meta */}
-        <div style={styles.metaRow}>
-          <span style={styles.availabilityBadge}>
-            <span style={styles.dot}>●</span> {profile.availability_status}
-          </span>
-          <span style={styles.locationText}>{profile.location}</span>
-        </div>
+        <motion.div style={styles.metaRow} variants={itemVariants}>
+          {profile.availability_status && (
+            <span style={styles.availabilityBadge}>
+              <span style={styles.dot}>●</span> {profile.availability_status}
+            </span>
+          )}
+          {profile.location && (
+            <span style={styles.locationText}>{profile.location}</span>
+          )}
+        </motion.div>
 
         {/* Editorial Hero Layout */}
         <div style={styles.mainGrid}>
-          <div style={styles.contentCol}>
-            <span style={styles.monoCategory}>{profile.title}</span>
-            
+          <motion.div style={styles.contentCol} variants={itemVariants}>
+            <span style={styles.monoCategory}>{profile.title || 'Senior Graphic Designer & Art Director'}</span>
+
             <h1 style={styles.editorialHeading}>
               Crafting <em style={styles.serifItalic}>timeless</em> brand identities & visual systems.
             </h1>
@@ -51,49 +86,85 @@ export default function Hero() {
 
             <div style={styles.actionRow} className="mobile-action-row">
               {profile.cv_url && (
-                <a
-                  href={profile.cv_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <motion.button
+                  whileHover={{ scale: 1.03, translateY: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(profile.cv_url);
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `${profile.name.replace(/\s+/g, '_')}_CV.pdf`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      const link = document.createElement('a');
+                      link.href = profile.cv_url;
+                      link.download = 'Andrew_Wanjala_CV.pdf';
+                      link.target = '_blank';
+                      link.click();
+                    }
+                  }}
                   style={styles.primaryBtn}
                   className="btn-responsive"
                 >
-                  Curriculum Vitae (PDF) &rarr;
-                </a>
+                  Download Curriculum Vitae (PDF) &darr;
+                </motion.button>
               )}
-              <a href="#contact" style={styles.secondaryBtn} className="btn-responsive">
+              <motion.a
+                whileHover={{ scale: 1.03, translateY: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                href="#contact"
+                style={styles.secondaryBtn}
+                className="btn-responsive"
+              >
                 Start Project Inquiry &rarr;
-              </a>
+              </motion.a>
             </div>
-          </div>
+          </motion.div>
 
           {profile.avatar_url && (
-            <div style={styles.imageCol}>
-              <div style={styles.frame}>
+            <motion.div style={styles.imageCol} variants={itemVariants}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.4 }}
+                style={styles.frame}
+              >
                 <img
                   src={profile.avatar_url}
                   alt={profile.name}
                   style={styles.avatarImg}
                 />
                 <span style={styles.caption}>Portrait / {profile.name}</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
 
 const styles = {
   heroSection: {
+    position: 'relative',
     padding: '48px 20px 64px 20px',
     backgroundColor: 'var(--bg-canvas)',
-    borderBottom: '1px solid var(--border-hairline)',
+    borderBottom: '1px solid var(--border-accent)',
+    boxShadow: '0 1px 0 0 var(--border-hairline)',
+    overflow: 'hidden',
   },
   container: {
     maxWidth: '1240px',
     margin: '0 auto',
+    position: 'relative',
+    zIndex: 1,
   },
   metaRow: {
     display: 'flex',
@@ -156,11 +227,14 @@ const styles = {
     color: 'var(--accent-bronze)',
   },
   bioText: {
-    fontSize: '15px',
-    lineHeight: '1.7',
-    color: 'var(--text-muted)',
+    fontSize: '16.5px',
+    fontWeight: '400',
+    lineHeight: '1.75',
+    color: 'var(--text-charcoal)',
+    opacity: 0.88,
     marginBottom: '32px',
-    maxWidth: '580px',
+    maxWidth: '600px',
+    letterSpacing: '-0.005em',
   },
   actionRow: {
     display: 'flex',
@@ -178,6 +252,7 @@ const styles = {
     textDecoration: 'none',
     letterSpacing: '0.02em',
     textAlign: 'center',
+    cursor: 'pointer',
   },
   secondaryBtn: {
     padding: '12px 24px',
