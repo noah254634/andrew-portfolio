@@ -51,6 +51,60 @@ export default function ProjectsPage() {
     return matchesCategory && matchesSearch;
   });
 
+  const isVideo = (url, contentType) => {
+    if (contentType && contentType.startsWith('video/')) return true;
+    if (url && /\.(mp4|webm|mov|m4v|ogv)$/i.test(url)) return true;
+    return false;
+  };
+
+  const renderCardThumbnail = (proj) => {
+    // Motion reel takes priority over static cover
+    if (proj.video_url) {
+      return (
+        <video
+          src={formatImageUrl(proj.video_url)}
+          poster={proj.cover_image_url ? formatImageUrl(proj.cover_image_url) : undefined}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          style={styles.cardImg}
+        />
+      );
+    }
+    if (proj.cover_image_url) {
+      const url = formatImageUrl(proj.cover_image_url);
+      // Fallback: cover might still be a video if stored in cover_image_url
+      if (isVideo(url, proj.cover_content_type)) {
+        return (
+          <video
+            src={url}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            style={styles.cardImg}
+          />
+        );
+      }
+      return (
+        <motion.img
+          src={url}
+          alt={proj.title}
+          style={styles.cardImg}
+          variants={{
+            hover: { scale: 1.06, transition: { duration: 0.4, ease: 'easeOut' } },
+          }}
+        />
+      );
+    }
+    return (
+      <div style={styles.imagePlaceholder}>
+        <span style={styles.placeholderTag}>{proj.category || 'Design'}</span>
+      </div>
+    );
+  };
+
   const gridContainerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -155,20 +209,7 @@ export default function ProjectsPage() {
                 className="editorial-card"
               >
                 <div style={styles.imageBox}>
-                  {proj.cover_image_url ? (
-                    <motion.img
-                      src={formatImageUrl(proj.cover_image_url)}
-                      alt={proj.title}
-                      style={styles.cardImg}
-                      variants={{
-                        hover: { scale: 1.06, transition: { duration: 0.4, ease: 'easeOut' } },
-                      }}
-                    />
-                  ) : (
-                    <div style={styles.imagePlaceholder}>
-                      <span style={styles.placeholderTag}>{proj.category || 'Design'}</span>
-                    </div>
-                  )}
+                  {renderCardThumbnail(proj)}
                   <div style={styles.imageBadgeOverlay}>
                     <span style={styles.categoryBadge}>{proj.category || 'Editorial'}</span>
                   </div>

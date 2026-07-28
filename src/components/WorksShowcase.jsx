@@ -138,23 +138,45 @@ export default function WorksShowcase() {
                 className="editorial-card"
               >
                 <div style={styles.imageBox}>
-                  {proj.cover_image_url ? (
+                  {/* Priority 1: Render Video if present */}
+                  {proj.video_url ? (
+                    <video
+                      src={formatImageUrl(proj.video_url)}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      preload="metadata"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  ) : proj.cover_image_url ? (
+                    /* Priority 2: Render Cover Image */
                     <motion.img
                       src={formatImageUrl(proj.cover_image_url)}
                       alt={proj.title}
+                      loading="lazy"
+                      decoding="async"
                       style={styles.cardImg}
                       variants={{
                         hover: { scale: 1.06, transition: { duration: 0.4, ease: 'easeOut' } },
                       }}
                     />
                   ) : (
+                    /* Priority 3: Fallback Placeholder */
                     <div style={styles.imagePlaceholder}>
                       <span style={styles.placeholderTag}>{proj.category || 'Design'}</span>
                     </div>
                   )}
+
                   <div style={styles.imageBadgeOverlay}>
                     <span style={styles.categoryBadge}>{proj.category || 'Editorial'}</span>
                   </div>
+
                   <motion.div
                     style={styles.hoverOverlay}
                     variants={{
@@ -169,7 +191,7 @@ export default function WorksShowcase() {
 
                 <div style={styles.cardBody}>
                   <div style={styles.cardMeta}>
-                    <span style={styles.clientText}>{proj.client || 'Commission'}</span>
+                    <span style={styles.clientText}>{proj.client_name || proj.client || 'Commission'}</span>
                     <span style={styles.yearText}>{proj.year}</span>
                   </div>
 
@@ -204,7 +226,6 @@ export default function WorksShowcase() {
 }
 
 const isMobileWidth = () => typeof window !== 'undefined' && window.innerWidth <= 768;
-
 const styles = {
   section: {
     padding: '64px 20px',

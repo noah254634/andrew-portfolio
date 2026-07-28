@@ -27,6 +27,26 @@ export default function ProjectDetail() {
     }
   };
 
+  const isVideo = (url, contentType) => {
+    if (contentType && contentType.startsWith('video/')) return true;
+    if (url && /\.(mp4|webm|mov|m4v|ogv)$/i.test(url)) return true;
+    return false;
+  };
+
+  const renderCoverMedia = (url, contentType, title) => {
+    if (isVideo(url, contentType)) {
+      return (
+        <video
+          src={url}
+          controls
+          preload="metadata"
+          style={styles.coverVideo}
+        />
+      );
+    }
+    return <img src={url} alt={title} style={styles.coverImg} />;
+  };
+
   return (
     <div style={styles.pageContainer}>
       <main style={styles.mainContent}>
@@ -59,14 +79,27 @@ export default function ProjectDetail() {
                 <p style={styles.summary}>{project.summary}</p>
               </div>
 
-              {/* Cover Image Frame */}
-              {project.cover_image_url && (
-                <div style={styles.coverFrame}>
-                  <img
-                    src={project.cover_image_url}
-                    alt={project.title}
-                    style={styles.coverImg}
-                  />
+              {/* High-End Cinema Frame */}
+              {(project.video_url || project.cover_image_url) && (
+                <div style={styles.heroStage}>
+                  <div style={styles.coverFrame}>
+                    {project.video_url ? (
+                      <video
+                        src={project.video_url}
+                        poster={project.cover_image_url || undefined}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        style={styles.coverVideo}
+                      />
+                    ) : (
+                      renderCoverMedia(
+                        project.cover_image_url,
+                        project.cover_content_type,
+                        project.title
+                      )
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -74,7 +107,9 @@ export default function ProjectDetail() {
               <div style={styles.detailsGrid}>
                 <div style={styles.detailCard}>
                   <span style={styles.detailLabel}>Client & Discipline</span>
-                  <p style={styles.detailVal}>{project.title} — {project.category}</p>
+                  <p style={styles.detailVal}>
+                    {project.client_name || project.title} — {project.category}
+                  </p>
                 </div>
 
                 <div style={styles.detailCard}>
@@ -84,7 +119,9 @@ export default function ProjectDetail() {
 
                 <div style={styles.detailCard}>
                   <span style={styles.detailLabel}>Core Deliverables</span>
-                  <p style={styles.detailVal}>Brand System, Typography Guidelines, Art Direction</p>
+                  <p style={styles.detailVal}>
+                    {project.video_url ? 'Motion Design, Video Production, Editing' : 'Brand System, Visual Direction'}
+                  </p>
                 </div>
               </div>
 
@@ -92,7 +129,8 @@ export default function ProjectDetail() {
               <div style={styles.narrativeSection}>
                 <h2 style={styles.sectionHeading}>Design Overview & Strategy</h2>
                 <p style={styles.paragraph}>
-                  This project embodies a strategic approach to brand identity, focusing on visual clarity, restraint, and distinctive typography. Every element was crafted to create lasting differentiation and seamless touchpoints across physical and digital mediums.
+                  {project.challenge ||
+                    'This project embodies a strategic approach to visual identity and motion design, focusing on clarity, timing, and restrained aesthetic principles. Every detail was crafted to maintain brand integrity across digital platforms.'}
                 </p>
               </div>
 
@@ -115,38 +153,40 @@ export default function ProjectDetail() {
 const styles = {
   pageContainer: {
     minHeight: '100vh',
-    backgroundColor: 'var(--bg-canvas)',
-    color: 'var(--text-charcoal)',
-    fontFamily: "var(--font-sans)",
+    backgroundColor: 'var(--bg-canvas, #0d0d0d)',
+    color: 'var(--text-charcoal, #f0f0f0)',
+    fontFamily: "var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
   },
   mainContent: {
     padding: '40px 24px 100px 24px',
   },
   container: {
-    maxWidth: '1000px',
+    maxWidth: '920px',
     margin: '0 auto',
   },
   topNav: {
-    marginBottom: '40px',
+    marginBottom: '32px',
   },
   backBtn: {
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-mono, monospace)",
     fontSize: '12px',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #888)',
     textDecoration: 'none',
+    letterSpacing: '0.05em',
+    transition: 'color 0.2s ease',
   },
   loadingBox: {
-    padding: '60px',
+    padding: '80px 0',
     textAlign: 'center',
-    fontFamily: "var(--font-mono)",
-    color: 'var(--text-muted)',
+    fontFamily: "var(--font-mono, monospace)",
+    color: 'var(--text-muted, #888)',
   },
   errorBox: {
-    padding: '60px',
+    padding: '80px 0',
     textAlign: 'center',
   },
   homeLink: {
-    color: 'var(--accent-bronze)',
+    color: 'var(--accent-bronze, #d4af37)',
     fontSize: '14px',
     marginTop: '16px',
     display: 'inline-block',
@@ -154,12 +194,12 @@ const styles = {
   article: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '40px',
+    gap: '48px',
   },
   header: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '20px',
   },
   metaRow: {
     display: 'flex',
@@ -167,99 +207,127 @@ const styles = {
     justifyContent: 'space-between',
   },
   categoryBadge: {
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-mono, monospace)",
     fontSize: '11px',
-    color: 'var(--accent-bronze)',
-    backgroundColor: 'var(--badge-bg)',
-    padding: '4px 10px',
-    borderRadius: '4px',
+    color: 'var(--accent-bronze, #d4af37)',
+    backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    border: '1px solid rgba(212, 175, 55, 0.2)',
+    padding: '5px 12px',
+    borderRadius: '20px',
     textTransform: 'uppercase',
+    letterSpacing: '0.08em',
   },
   yearText: {
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-mono, monospace)",
     fontSize: '12px',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #888)',
   },
   title: {
-    fontFamily: "var(--font-serif)",
-    fontSize: 'clamp(40px, 6vw, 64px)',
+    fontFamily: "var(--font-serif, Georgia, serif)",
+    fontSize: 'clamp(32px, 5vw, 52px)',
     fontWeight: '400',
-    lineHeight: '1.1',
+    lineHeight: '1.15',
     margin: 0,
+    letterSpacing: '-0.02em',
   },
   summary: {
-    fontSize: '18px',
+    fontSize: '17px',
     lineHeight: '1.7',
-    color: 'var(--text-muted)',
-    maxWidth: '720px',
+    color: 'var(--text-muted, #aaa)',
+    maxWidth: '680px',
+  },
+  /* Editorial Cinema Framing */
+  heroStage: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#050505',
+    borderRadius: '16px',
+    padding: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
   },
   coverFrame: {
     width: '100%',
-    maxHeight: '540px',
-    backgroundColor: 'var(--bg-surface)',
-    borderRadius: '16px',
+    maxWidth: '800px',
+    aspectRatio: '16 / 9',
+    borderRadius: '10px',
     overflow: 'hidden',
-    border: '1px solid var(--border-hairline)',
+    backgroundColor: '#000',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   coverImg: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: 'contain',
+  },
+  coverVideo: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    backgroundColor: '#000',
+    display: 'block',
   },
   detailsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '24px',
     padding: '32px',
-    backgroundColor: 'var(--bg-surface)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderRadius: '12px',
-    border: '1px solid var(--border-hairline)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
   },
   detailCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '8px',
   },
   detailLabel: {
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-mono, monospace)",
     fontSize: '10px',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #777)',
     textTransform: 'uppercase',
-    letterSpacing: '0.06em',
+    letterSpacing: '0.08em',
   },
   detailVal: {
     fontSize: '14px',
-    color: 'var(--text-charcoal)',
+    color: 'var(--text-charcoal, #eee)',
     fontWeight: '500',
+    lineHeight: '1.5',
   },
   narrativeSection: {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-    paddingTop: '20px',
+    paddingTop: '12px',
   },
   sectionHeading: {
-    fontFamily: "var(--font-serif)",
-    fontSize: '32px',
+    fontFamily: "var(--font-serif, Georgia, serif)",
+    fontSize: '28px',
     fontWeight: '400',
   },
   paragraph: {
     fontSize: '16px',
     lineHeight: '1.8',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #aaa)',
   },
   bottomNav: {
     paddingTop: '40px',
-    borderTop: '1px solid var(--border-hairline)',
+    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
     textAlign: 'center',
   },
   primaryBackBtn: {
     padding: '14px 28px',
-    backgroundColor: 'var(--text-charcoal)',
-    color: 'var(--bg-canvas)',
-    borderRadius: '6px',
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    borderRadius: '8px',
     textDecoration: 'none',
     fontSize: '13px',
-    fontWeight: '500',
+    fontWeight: '600',
+    display: 'inline-block',
+    transition: 'transform 0.2s ease, opacity 0.2s ease',
   },
 };
