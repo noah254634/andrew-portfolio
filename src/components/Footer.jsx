@@ -73,10 +73,10 @@ export default function Footer() {
           <div style={styles.navCol}>
             <span style={styles.colTitle}>Navigation</span>
             <ul style={styles.linkList}>
-              <li><a href="#works" style={styles.link}>Work</a></li>
-              <li><a href="#about" style={styles.link}>About</a></li>
-              <li><a href="#services" style={styles.link}>Services</a></li>
-              <li><a href="#contact" style={styles.link}>Contact</a></li>
+              <li><a href="#works" className="footer-nav-link">Work</a></li>
+              <li><a href="#about" className="footer-nav-link">About</a></li>
+              <li><a href="#services" className="footer-nav-link">Services</a></li>
+              <li><a href="#contact" className="footer-nav-link">Contact</a></li>
             </ul>
           </div>
 
@@ -86,43 +86,43 @@ export default function Footer() {
             <ul style={styles.linkList}>
               {profile.social_links?.instagram && (
                 <li>
-                  <a href={profile.social_links.instagram} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    Instagram &rarr;
+                  <a href={profile.social_links.instagram} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>Instagram</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
               {profile.social_links?.facebook && (
                 <li>
-                  <a href={profile.social_links.facebook} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    Facebook &rarr;
+                  <a href={profile.social_links.facebook} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>Facebook</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
               {profile.social_links?.whatsapp && (
                 <li>
-                  <a href={profile.social_links.whatsapp} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    WhatsApp &rarr;
+                  <a href={profile.social_links.whatsapp} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>WhatsApp</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
               {profile.social_links?.linkedin && (
                 <li>
-                  <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    LinkedIn &rarr;
+                  <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>LinkedIn</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
               {profile.social_links?.twitter && (
                 <li>
-                  <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    Twitter &rarr;
+                  <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>Twitter</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
               {profile.social_links?.behance && (
                 <li>
-                  <a href={profile.social_links.behance} target="_blank" rel="noopener noreferrer" style={styles.link}>
-                    Behance &rarr;
+                  <a href={profile.social_links.behance} target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                    <span>Behance</span> <span className="social-arrow">&rarr;</span>
                   </a>
                 </li>
               )}
@@ -139,10 +139,12 @@ export default function Footer() {
               href="https://wa.me/254743657839"
               target="_blank"
               rel="noopener noreferrer"
-              className="stealth-link"
-              style={styles.stealthLink}
+              className="khaemba-badge"
+              title="Need a fast, high-end website? Chat with Khaemba on WhatsApp"
             >
-              Built by Khaemba
+              <span className="khaemba-dot">●</span>
+              <span className="khaemba-label">Website by <strong>Khaemba</strong></span>
+              <span className="khaemba-arrow">↗</span>
             </a>
           </span>
         </div>
@@ -253,12 +255,79 @@ if (typeof document !== 'undefined' && !document.getElementById('footer-responsi
         grid-column: span 1 !important;
       }
     }
-    .stealth-link {
-      transition: color 0.2s ease, opacity 0.2s ease;
+    .footer-social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-charcoal);
+      font-size: 13px;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.215, 0.61, 0.355, 1);
     }
-    .stealth-link:hover {
+    .footer-social-link .social-arrow {
+      display: inline-block;
+      color: var(--accent-bronze);
+      transition: transform 0.25s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    .footer-social-link:hover {
       color: var(--accent-bronze) !important;
-      opacity: 0.95;
+      transform: translateX(5px);
+    }
+    .footer-social-link:hover .social-arrow {
+      transform: translateX(4px);
+    }
+    .footer-nav-link {
+      display: inline-block;
+      color: var(--text-charcoal);
+      font-size: 13px;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    .footer-nav-link:hover {
+      color: var(--accent-bronze) !important;
+      transform: translateX(5px);
+    }
+    .khaemba-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 20px;
+      color: var(--text-charcoal);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.215, 0.61, 0.355, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+    .khaemba-dot {
+      color: var(--accent-bronze);
+      font-size: 8px;
+      animation: khaembaPulse 2.4s infinite ease-in-out;
+    }
+    @keyframes khaembaPulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 4px var(--accent-bronze)); }
+    }
+    .khaemba-label strong {
+      color: var(--accent-bronze);
+      font-weight: 600;
+    }
+    .khaemba-arrow {
+      font-size: 11px;
+      color: var(--accent-bronze);
+      transition: transform 0.2s ease;
+    }
+    .khaemba-badge:hover {
+      border-color: var(--accent-bronze);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(197, 160, 89, 0.15);
+      background-color: var(--bg-canvas);
+    }
+    .khaemba-badge:hover .khaemba-arrow {
+      transform: translate(2px, -2px);
     }
   `;
   document.head.appendChild(style);
