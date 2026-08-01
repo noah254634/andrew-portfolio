@@ -39,6 +39,18 @@ export default function ReviewsSection() {
     };
   }, [reviews, isPaused]);
 
+  // Preload all reviewer avatars into browser memory cache for 0ms slide transitions
+  useEffect(() => {
+    if (Array.isArray(reviews) && reviews.length > 0) {
+      reviews.forEach((r) => {
+        if (r.client_avatar) {
+          const img = new Image();
+          img.src = formatImageUrl(r.client_avatar, 150);
+        }
+      });
+    }
+  }, [reviews]);
+
   const fetchReviews = async () => {
     try {
       const response = await api.get('/reviews');
@@ -170,7 +182,8 @@ export default function ReviewsSection() {
                         <img
                           src={formatImageUrl(activeReview.client_avatar, 150)}
                           alt={activeReview.client_name}
-                          loading="lazy"
+                          loading="eager"
+                          fetchPriority="high"
                           decoding="async"
                           style={styles.avatarImg}
                         />
