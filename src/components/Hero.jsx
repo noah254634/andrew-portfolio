@@ -1,17 +1,34 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
+import api, { formatImageUrl } from '../api/axios';
 import StarfieldCanvas from './StarfieldCanvas';
 
+const PROFILE_CACHE_KEY = 'swr_cached_profile';
+
 export default function Hero() {
-  const [profile, setProfile] = useState({
-    name: 'Andrew Wanjala',
-    title: 'Senior Graphic Designer & Art Director',
-    bio: 'Specializing in typography-driven brand identities, editorial publications, and minimalist visual systems for design-forward clients.',
-    avatar_url: '',
-    cv_url: '',
-    availability_status: 'Available for Q1/Q2 Commissions',
-    location: 'Nairobi, Kenya / Global Remote',
+  const [profile, setProfile] = useState(() => {
+    try {
+      const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+      return cached ? JSON.parse(cached) : {
+        name: 'Andrew Wanjala',
+        title: 'Senior Graphic Designer & Art Director',
+        bio: 'Specializing in typography-driven brand identities, editorial publications, and minimalist visual systems for design-forward clients.',
+        avatar_url: '',
+        cv_url: '',
+        availability_status: 'Available for Q1/Q2 Commissions',
+        location: 'Nairobi, Kenya / Global Remote',
+      };
+    } catch (e) {
+      return {
+        name: 'Andrew Wanjala',
+        title: 'Senior Graphic Designer & Art Director',
+        bio: 'Specializing in typography-driven brand identities, editorial publications, and minimalist visual systems for design-forward clients.',
+        avatar_url: '',
+        cv_url: '',
+        availability_status: 'Available for Q1/Q2 Commissions',
+        location: 'Nairobi, Kenya / Global Remote',
+      };
+    }
   });
 
   useEffect(() => {
@@ -22,10 +39,11 @@ export default function Hero() {
     try {
       const response = await api.get('/profile');
       if (response.data) {
-        setProfile((prev) => ({
-          ...prev,
-          ...response.data,
-        }));
+        setProfile((prev) => {
+          const nextState = { ...prev, ...response.data };
+          localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(nextState));
+          return nextState;
+        });
       }
     } catch (err) {
       console.warn('Using default profile content:', err);
@@ -137,8 +155,11 @@ export default function Hero() {
                 style={styles.frame}
               >
                 <img
-                  src={profile.avatar_url}
+                  src={formatImageUrl(profile.avatar_url, 600)}
                   alt={profile.name}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   style={styles.avatarImg}
                 />
                 <span style={styles.caption}>Portrait / {profile.name}</span>

@@ -30,12 +30,14 @@ export const getApiBaseURL = () => {
   return DEFAULT_RENDER_API_URL;
 };
 
-// Formats image URLs dynamically & compresses Unsplash raw images to 800px WebP to prevent mobile RAM/GPU freezing
-export const formatImageUrl = (url) => {
+// Formats image URLs dynamically & compresses Unsplash raw images to target width (default 800px) WebP to prevent mobile RAM/GPU freezing
+export const formatImageUrl = (url, width = 800) => {
   if (!url) return '';
-  if (url.includes('images.unsplash.com') && !url.includes('w=')) {
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}auto=format&fit=crop&w=800&q=85`;
+  if (url.includes('images.unsplash.com')) {
+    if (!url.includes('w=')) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}auto=format&fit=crop&w=${width}&q=80`;
+    }
   }
   if (url.startsWith('http://127.0.0.1:8000') || url.startsWith('http://localhost:8000')) {
     const relativePath = url.replace(/^http:\/\/(127\.0\.0\.1|localhost):8000/, '');

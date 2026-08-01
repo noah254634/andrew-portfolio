@@ -1,17 +1,38 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
+const PROFILE_CACHE_KEY = 'swr_cached_profile';
+
 export default function Footer() {
-  const [profile, setProfile] = useState({
-    name: 'Andrew Wanjala',
-    bio: 'Designer and brand strategist crafting distinctive identities with intention and restraint.',
-    social_links: {
-      behance: 'https://behance.net',
-      dribbble: 'https://dribbble.com',
-      instagram: 'https://instagram.com',
-      linkedin: 'https://linkedin.com',
-      twitter: 'https://twitter.com',
-    },
+  const [profile, setProfile] = useState(() => {
+    try {
+      const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+      return cached ? JSON.parse(cached) : {
+        name: 'Andrew Wanjala',
+        bio: 'Designer and brand strategist crafting distinctive identities with intention and restraint.',
+        social_links: {
+          instagram: 'https://instagram.com/wanjala9521',
+          facebook: 'https://facebook.com/Andrew Wanjala',
+          whatsapp: 'https://wa.me/254714513051',
+          linkedin: '',
+          behance: '',
+          twitter: '',
+        },
+      };
+    } catch (e) {
+      return {
+        name: 'Andrew Wanjala',
+        bio: 'Designer and brand strategist crafting distinctive identities with intention and restraint.',
+        social_links: {
+          instagram: 'https://instagram.com/wanjala9521',
+          facebook: 'https://facebook.com/wanjala9521',
+          whatsapp: 'https://wa.me/254714513051',
+          linkedin: '',
+          behance: '',
+          twitter: '',
+        },
+      };
+    }
   });
 
   useEffect(() => {
@@ -22,11 +43,16 @@ export default function Footer() {
     try {
       const response = await api.get('/profile');
       if (response.data) {
-        setProfile((prev) => ({
-          name: response.data.name || prev.name,
-          bio: response.data.bio || prev.bio,
-          social_links: response.data.social_links || prev.social_links,
-        }));
+        setProfile((prev) => {
+          const nextState = {
+            ...prev,
+            name: response.data.name || prev.name,
+            bio: response.data.bio || prev.bio,
+            social_links: response.data.social_links || prev.social_links,
+          };
+          localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(nextState));
+          return nextState;
+        });
       }
     } catch (err) {
       console.warn('Using default footer profile:', err);
@@ -62,6 +88,20 @@ export default function Footer() {
                 <li>
                   <a href={profile.social_links.instagram} target="_blank" rel="noopener noreferrer" style={styles.link}>
                     Instagram &rarr;
+                  </a>
+                </li>
+              )}
+              {profile.social_links?.facebook && (
+                <li>
+                  <a href={profile.social_links.facebook} target="_blank" rel="noopener noreferrer" style={styles.link}>
+                    Facebook &rarr;
+                  </a>
+                </li>
+              )}
+              {profile.social_links?.whatsapp && (
+                <li>
+                  <a href={profile.social_links.whatsapp} target="_blank" rel="noopener noreferrer" style={styles.link}>
+                    WhatsApp &rarr;
                   </a>
                 </li>
               )}

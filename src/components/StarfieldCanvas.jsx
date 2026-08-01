@@ -19,30 +19,41 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
       return;
     }
 
-    let animId;
+    let animId = null;
     let isVisible = true;
     let pointer = { x: null, y: null };
     let stars = [];
     let isMobile = window.innerWidth <= 768;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const getDimensions = () => {
+      const parent = canvas.parentElement;
+      const width = parent ? parent.offsetWidth : window.innerWidth;
+      const height = parent ? parent.offsetHeight : window.innerHeight;
+      return { width, height };
+    };
 
     const resize = () => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        canvas.width = parent.offsetWidth;
-        canvas.height = parent.offsetHeight;
-      }
+      const { width, height } = getDimensions();
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset scale before scaling
+      ctx.scale(dpr, dpr);
       isMobile = window.innerWidth <= 768;
     };
 
     const createStar = () => {
+      const { width, height } = getDimensions();
       const depth = Math.random();
       const baseSize = isMobile ? depth * 1.0 + 0.8 : depth * 1.5 + 1.0;
       const angle = Math.random() * Math.PI * 2;
       const speed = depth * 0.3 + 0.15;
 
       return {
-        x: Math.random() * (canvas.width || window.innerWidth),
-        y: Math.random() * (canvas.height || window.innerHeight),
+        x: Math.random() * width,
+        y: Math.random() * height,
         size: baseSize,
         baseSize,
         depth,
@@ -61,15 +72,18 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
 
     const init = () => {
       resize();
-      // Cap particle count strictly: Mobile = 24, Desktop = 120
       const count = overrideCount || (isMobile ? 24 : 120);
       stars = Array.from({ length: count }, createStar);
     };
 
     const draw = (time) => {
-      if (!isVisible) return;
+      if (!isVisible) {
+        animId = null;
+        return;
+      }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const { width, height } = getDimensions();
+      ctx.clearRect(0, 0, width, height);
 
       const attractRadius = isMobile ? 120 : 200;
       const attractStrength = isMobile ? 0.04 : 0.06;
@@ -104,10 +118,10 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
         s.x += s.vx + Math.cos(s.wavePhase) * s.waveAmplitude;
         s.y += s.vy + Math.sin(s.wavePhase) * s.waveAmplitude;
 
-        if (s.x < -10) s.x = canvas.width + 10;
-        if (s.x > canvas.width + 10) s.x = -10;
-        if (s.y < -10) s.y = canvas.height + 10;
-        if (s.y > canvas.height + 10) s.y = -10;
+        if (s.x < -10) s.x = width + 10;
+        if (s.x > width + 10) s.x = -10;
+        if (s.y < -10) s.y = height + 10;
+        if (s.y > height + 10) s.y = -10;
 
         const renderSize = isNear ? Math.min(s.baseSize + distFraction * 1.2, isMobile ? 2.5 : 3.5) : s.baseSize;
 
@@ -120,13 +134,28 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
       animId = requestAnimationFrame(draw);
     };
 
+    const startLoop = () => {
+      if (isVisible && !animId) {
+        animId = requestAnimationFrame(draw);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
     // Pause rendering when canvas is scrolled off-screen or tab is inactive
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         isVisible = entry.isIntersecting;
-        if (isVisible && !animId) {
-          animId = requestAnimationFrame(draw);
+        if (isVisible) {
+          startLoop();
+        } else {
+          stopLoop();
         }
       },
       { threshold: 0.05 }
@@ -135,8 +164,10 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
 
     const handleVisibilityChange = () => {
       isVisible = !document.hidden;
-      if (isVisible && !animId) {
-        animId = requestAnimationFrame(draw);
+      if (isVisible) {
+        startLoop();
+      } else {
+        stopLoop();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -154,7 +185,7 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
     };
 
     init();
-    animId = requestAnimationFrame(draw);
+    startLoop();
 
     if (!isMobile) {
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -163,7 +194,7 @@ export default function StarfieldCanvas({ particleCount: overrideCount }) {
     window.addEventListener('resize', init);
 
     return () => {
-      cancelAnimationFrame(animId);
+      stopLoop();
       observer.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (!isMobile) {

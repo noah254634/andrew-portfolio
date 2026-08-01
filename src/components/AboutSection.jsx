@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import api, { formatImageUrl } from '../api/axios';
+
+const PROFILE_CACHE_KEY = 'swr_cached_profile';
 
 export default function AboutSection() {
-  const [profile, setProfile] = useState({
-    name: 'Andrew Wanjala',
-    avatar_url: '',
-    bio: 'With over a decade of experience working with brands across industries, I bring a strategic approach to every project. My work is rooted in the belief that the best brands are built on clarity, consistency, and restraint.',
+  const [profile, setProfile] = useState(() => {
+    try {
+      const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+      return cached ? JSON.parse(cached) : {
+        name: 'Andrew Wanjala',
+        avatar_url: '',
+        bio: 'With over a decade of experience working with brands across industries, I bring a strategic approach to every project. My work is rooted in the belief that the best brands are built on clarity, consistency, and restraint.',
+      };
+    } catch (e) {
+      return {
+        name: 'Andrew Wanjala',
+        avatar_url: '',
+        bio: 'With over a decade of experience working with brands across industries, I bring a strategic approach to every project. My work is rooted in the belief that the best brands are built on clarity, consistency, and restraint.',
+      };
+    }
   });
 
   useEffect(() => {
@@ -15,12 +28,17 @@ export default function AboutSection() {
   const fetchProfile = async () => {
     try {
       const response = await api.get('/profile');
-      if (response.data && response.data.bio) {
-        setProfile((prev) => ({
-          ...prev,
-          avatar_url: response.data.avatar_url || prev.avatar_url,
-          bio: response.data.bio || prev.bio,
-        }));
+      if (response.data) {
+        setProfile((prev) => {
+          const nextState = {
+            ...prev,
+            name: response.data.name || prev.name,
+            avatar_url: response.data.avatar_url || prev.avatar_url,
+            bio: response.data.bio || prev.bio,
+          };
+          localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(nextState));
+          return nextState;
+        });
       }
     } catch (err) {
       console.warn('Using default about content:', err);
@@ -48,7 +66,7 @@ export default function AboutSection() {
             <div style={styles.frame}>
               {profile.avatar_url ? (
                 <img
-                  src={profile.avatar_url}
+                  src={formatImageUrl(profile.avatar_url, 600)}
                   alt={profile.name}
                   loading="eager"
                   fetchPriority="high"

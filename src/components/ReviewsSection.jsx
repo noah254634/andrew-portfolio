@@ -168,8 +168,10 @@ export default function ReviewsSection() {
                     <div style={styles.clientProfile}>
                       {activeReview.client_avatar ? (
                         <img
-                          src={formatImageUrl(activeReview.client_avatar)}
+                          src={formatImageUrl(activeReview.client_avatar, 150)}
                           alt={activeReview.client_name}
+                          loading="lazy"
+                          decoding="async"
                           style={styles.avatarImg}
                         />
                       ) : (
